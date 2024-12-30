@@ -2,6 +2,14 @@
 
 Este repositório contém um script para configurar o **Zabbix Proxy 7.2** no seu sistema. O script realiza várias tarefas para garantir que o ambiente esteja configurado corretamente, desde a criação de usuários e permissões até a cópia de arquivos e bibliotecas necessárias.
 
+## Aviso
+
+Recomenda-se desinstalar qualquer outra versão do Zabbix Proxy antes de executar este script para evitar conflitos durante a instalação.
+
+Os binários utilizados neste script foram compilados em um sistema FreeBSD 14 e copiados para serem executados no PfSense.
+
+Este script foi desenvolvido e testado **exclusivamente para o PfSense CE 2.7**. O uso em outras versões ou sistemas pode não funcionar como esperado.
+
 ## Pré-requisitos
 
 Antes de começar, certifique-se de ter:
