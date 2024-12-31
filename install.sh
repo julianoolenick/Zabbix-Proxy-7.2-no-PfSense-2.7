@@ -100,7 +100,7 @@ fi
 
 # Criação dos diretórios necessários
 echo "Criando diretórios necessários..."
-mkdir -p "$BIN_DIR" "$BIN_JS_DIR" "$CONF_DIR" "$LIB_DIR" "$DB_DIR" "$LOG_DIR" /usr/local/lib
+mkdir -p "$BIN_DIR" "$BIN_JS_DIR" "$CONF_DIR" "$LIB_DIR" "$DB_DIR" "$LOG_DIR" /usr/local/lib /usr/local/etc/zabbix/
 
 # Criando o arquivo de log do proxy e ajustando permissões
 if [ ! -f "$LOG_FILE" ]; then
