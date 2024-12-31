@@ -16,6 +16,7 @@ Antes de começar, certifique-se de ter:
 
 - **Acesso root** ou permissões equivalentes no sistema.
 - **Git instalado** para clonar este repositório.
+
 ```bash
 pkg install git
 ```

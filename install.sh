@@ -3,6 +3,51 @@
 # Caminhos dos arquivos descompactados
 SOURCE_DIR="$(cd "$(dirname "$0")" && pwd)"
 
+# Pergunta o modo do Zabbix Proxy
+echo "Digite o modo do Zabbix Proxy (0 para ativo, 1 para passivo):"
+read -r ZABBIX_PROXY_MODE
+
+if [ "$ZABBIX_PROXY_MODE" != "0" ] && [ "$ZABBIX_PROXY_MODE" != "1" ]; then
+    echo "Modo inválido. Escolha 0 (ativo) ou 1 (passivo)."
+    exit 1
+fi
+
+# Pergunta o endereço do servidor Zabbix
+echo "Digite o endereço do servidor Zabbix (exemplo: zabbix.example.com):"
+read -r ZABBIX_SERVER
+
+if [ -z "$ZABBIX_SERVER" ]; then
+    echo "Endereço do servidor Zabbix não pode estar vazio."
+    exit 1
+fi
+
+# Pergunta o nome do proxy
+echo "Digite o nome do Proxy:"
+read -r ZABBIX_PROXY_NAME
+
+if [ -z "$ZABBIX_PROXY_NAME" ]; then
+    echo "O nome do Proxy não pode estar vazio."
+    exit 1
+fi
+
+# Caminho do arquivo de configuração
+ZABBIX_PROXY_CONF="$SOURCE_DIR/zabbix72/zabbix_proxy.conf"
+
+if [ ! -f "$ZABBIX_PROXY_CONF" ]; then
+    echo "Erro: Arquivo de configuração $ZABBIX_PROXY_CONF não encontrado."
+    exit 1
+fi
+
+# Substitui as configurações no arquivo de configuração
+echo "Atualizando configurações no arquivo $ZABBIX_PROXY_CONF..."
+
+sed -i.bak \
+    -e "s/^Server=.*$/Server=$ZABBIX_SERVER/" \
+    -e "s/^ServerActive=.*$/ServerActive=$ZABBIX_SERVER/" \
+    -e "s/^Hostname=.*$/Hostname=$ZABBIX_PROXY_NAME/" \
+    -e "s/^ProxyMode=.*$/ProxyMode=$ZABBIX_PROXY_MODE/" \
+    "$ZABBIX_PROXY_CONF"
+
 # Destinos dos arquivos
 BIN_DIR="/usr/local/sbin"
 BIN_JS_DIR="/usr/local/bin"
