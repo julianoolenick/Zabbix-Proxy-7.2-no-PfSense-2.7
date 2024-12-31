@@ -30,6 +30,15 @@ if [ -z "$ZABBIX_PROXY_NAME" ]; then
     exit 1
 fi
 
+#Pergunta o nome do agente
+echo "Digite o nome do Agente:"
+read -r ZABBIX_AGENT_NAME
+
+if [ -z "$ZABBIX_AGENT_NAME" ]; then
+    echo "O nome do Agente não pode estar vazio."
+    exit 1
+fi
+
 # Caminho do arquivo de configuração
 ZABBIX_PROXY_CONF="$SOURCE_DIR/zabbix72/zabbix_proxy.conf"
 
@@ -48,6 +57,14 @@ sed -i.bak \
     -e "s/^ProxyMode=.*$/ProxyMode=$ZABBIX_PROXY_MODE/" \
     "$ZABBIX_PROXY_CONF"
 
+ZABBIX_AGENT_CONF="$SOURCE_DIR/agent/zabbix_agentd.conf"
+
+# Substitui as configurações no arquivo de configuração do agente
+echo "Atualizando configurações no arquivo $ZABBIX_AGENT_CONF..."
+sed -i.bak \
+    -e "s/^Hostname=.*$/Hostname=$ZABBIX_AGENT_NAME/" \
+    "$ZABBIX_AGENT_CONF"
+
 # Destinos dos arquivos
 BIN_DIR="/usr/local/sbin"
 BIN_JS_DIR="/usr/local/bin"
@@ -56,6 +73,7 @@ LIB_DIR="/usr/local/lib/zabbix"
 DB_DIR="/var/lib/zabbix"
 LOG_DIR="/var/log/zabbix"
 LOG_FILE="$LOG_DIR/zabbix_proxy.log"
+AGENT_LOG_FILE="$LOG_DIR/zabbix_agentd.log"
 RC_SCRIPT="/usr/local/etc/rc.d/zabbix_proxy"
 
 # Verifica se o diretório de origem existe
@@ -84,15 +102,24 @@ fi
 echo "Criando diretórios necessários..."
 mkdir -p "$BIN_DIR" "$BIN_JS_DIR" "$CONF_DIR" "$LIB_DIR" "$DB_DIR" "$LOG_DIR" /usr/local/lib
 
-# Criando o arquivo de log e ajustando permissões
+# Criando o arquivo de log do proxy e ajustando permissões
 if [ ! -f "$LOG_FILE" ]; then
     echo "Criando arquivo de log $LOG_FILE..."
     touch "$LOG_FILE"
 fi
+
+# Criando o arquivo de log do agente e ajustando permissões
+if [ ! -f "$AGENT_LOG_FILE" ]; then
+    echo "Criando arquivo de log $AGENT_LOG_FILE..."
+    touch "$AGENT_LOG_FILE"
+fi
+
 echo "Ajustando permissões para o arquivo de log..."
 chown -R zabbix:zabbix "$LOG_DIR"
+chown -R zabbix:zabbix "$AGENT_LOG_FILE"
 chmod 755 "$LOG_DIR"
 chmod 644 "$LOG_FILE"
+chmod 644 "$AGENT_LOG_FILE"
 
 # Criando o diretório de runtime e ajustando permissões
 echo "Criando diretório /var/run/zabbix..."
@@ -100,26 +127,47 @@ mkdir -p /var/run/zabbix
 chown zabbix:zabbix /var/run/zabbix
 chmod 755 /var/run/zabbix
 
-# Copiando os binários
+# Copiando os binários do proxy
 echo "Copiando binários..."
 if [ -f "$SOURCE_DIR/zabbix_proxy" ]; then
     cp "$SOURCE_DIR/zabbix_proxy" "$BIN_DIR/"
+    
 else
     echo "Aviso: Arquivo 'zabbix_proxy' não encontrado."
 fi
 
+# Copiando os binários do agente
+echo "Copiando binários..."
+if [ -f "$SOURCE_DIR/agent/zabbix_agentd" ]; then
+    cp "$SOURCE_DIR/agent/zabbix_agentd" "$BIN_DIR/"
+    
+else
+    echo "Aviso: Arquivo agent/zabbix_agentd não encontrado."
+fi
+
+# Copiando os binários zabix_proxy_js
 if [ -f "$SOURCE_DIR/zabbix_proxy_js" ]; then
     cp "$SOURCE_DIR/zabbix_proxy_js" "$BIN_JS_DIR/"
 else
     echo "Aviso: Arquivo 'zabbix_proxy_js' não encontrado."
 fi
 
-# Copiando arquivos de configuração
+# Copiando arquivos de configuração do proxy
 echo "Copiando arquivos de configuração..."
 if [ -d "$SOURCE_DIR/zabbix72" ]; then
     cp -r "$SOURCE_DIR/zabbix72"/* "$CONF_DIR/"
+   
 else
     echo "Aviso: Diretório de configuração 'zabbix72' não encontrado."
+fi
+
+# Copiando arquivos de configuração do agente
+echo "Copiando arquivos de configuração..."
+if [ -d "$SOURCE_DIR/zabbix72" ]; then
+    cp -r "$SOURCE_DIR/agent/zabbix_agentd.conf" /usr/local/etc/zabbix/
+   
+else
+    echo "Aviso: Arquivo de configuração 'zabbix_agentd.conf' não encontrado."
 fi
 
 # Copiando bibliotecas adicionais
@@ -198,6 +246,49 @@ service zabbix_proxy restart || echo "Erro: Não foi possível reiniciar o servi
 # Verificando o status do serviço
 echo "Verificando o status do Zabbix Proxy..."
 service zabbix_proxy status || echo "Erro: Serviço Zabbix Proxy não está ativo."
+
+# Criando o script de inicialização do Zabbix Agent
+echo "Criando script de inicialização do Zabbix Agent..."
+cat <<EOF > /usr/local/etc/rc.d/zabbix_agent
+#!/bin/sh
+#
+# PROVIDE: zabbix_agent
+# REQUIRE: LOGIN
+# KEYWORD: shutdown
+#
+# Add the following lines to /etc/rc.conf to enable zabbix_agent:
+#
+# zabbix_agent_enable="YES"
+#
+
+. /etc/rc.subr
+
+name="zabbix_agent"
+rcvar=zabbix_agent_enable
+
+command="/usr/local/sbin/zabbix_agentd"
+command_args="-c /usr/local/etc/zabbix/zabbix_agentd.conf"
+
+load_rc_config \$name
+run_rc_command "\$1"
+EOF
+
+chmod +x /usr/local/etc/rc.d/zabbix_agent
+
+# Adicionando Zabbix Agent ao rc.conf
+echo "Configurando Zabbix Agent para iniciar automaticamente..."
+if ! grep -q "zabbix_agent_enable" /etc/rc.conf; then
+    echo 'zabbix_agent_enable="YES"' >> /etc/rc.conf
+fi
+
+# Reiniciando serviço Zabbix Agent
+echo "Reiniciando o serviço Zabbix Agent..."
+service zabbix_agent restart || echo "Erro: Não foi possível reiniciar o serviço Zabbix Agent."
+
+# Verificando o status do serviço Zabbix Agent
+echo "Verificando o status do Zabbix Agent..."
+service zabbix_agent status || echo "Erro: Serviço Zabbix Agent não está ativo."
+
 
 echo "Configuração concluída!"
 
