@@ -1,10 +1,10 @@
-# Instalação do Zabbix Proxy 7.2
+# Instalação do Zabbix Proxy e Agent 7.2
 
-Este repositório contém um script para configurar o **Zabbix Proxy 7.2** no seu sistema. O script realiza várias tarefas para garantir que o ambiente esteja configurado corretamente, desde a criação de usuários e permissões até a cópia de arquivos e bibliotecas necessárias.
+Este repositório contém um script para configurar o **Zabbix Proxy 7.2** e o **Zabbix Agent 7.2** no seu sistema. O script realiza várias tarefas para garantir que o ambiente esteja configurado corretamente, desde a criação de usuários e permissões até a cópia de arquivos e bibliotecas necessárias.
 
 ## Aviso
 
-Recomenda-se desinstalar qualquer outra versão do Zabbix Proxy antes de executar este script para evitar conflitos durante a instalação.
+Recomenda-se desinstalar qualquer outra versão do Zabbix Proxy e Agent antes de executar este script para evitar conflitos durante a instalação.
 
 Os binários utilizados neste script foram compilados em um sistema FreeBSD 14 e copiados para serem executados no PfSense.
 
@@ -50,46 +50,56 @@ pkg install git
 
 ## O Que o Script Faz?
 
-O script realiza os seguintes passos para configurar o **Zabbix Proxy**:
+O script realiza os seguintes passos para configurar o **Zabbix Proxy** e o **Zabbix Agent**:
 
-1. **Detecta o Diretório Atual:**
+1. **Pergunta Dados de Configuração:**
+   - Solicita o modo do Proxy (ativo ou passivo).
+   - Solicita o endereço do servidor Zabbix.
+   - Solicita o nome do Proxy.
+   - Solicita o nome do Agente.
+
+2. **Detecta o Diretório Atual:**
    - Usa o diretório de execução como origem dos arquivos.
 
-2. **Cria Usuário e Grupo `zabbix`:**
+3. **Cria Usuário e Grupo `zabbix`:**
    - Adiciona o usuário `zabbix` e o grupo `zabbix` ao sistema, caso ainda não existam.
 
-3. **Copia Arquivos Essenciais:**
-   - Copia binários para `/usr/local/sbin` e `/usr/local/bin`.
-   - Copia arquivos de configuração para `/usr/local/etc/zabbix72`.
+4. **Copia Arquivos Essenciais:**
+   - Copia binários do Proxy para `/usr/local/sbin`.
+   - Copia binários do Agent para `/usr/local/sbin`.
+   - Copia arquivos de configuração do Proxy para `/usr/local/etc/zabbix72`.
+   - Copia arquivos de configuração do Agent para `/usr/local/etc/zabbix`.
    - Copia bibliotecas adicionais para `/usr/local/lib/zabbix`.
    - Copia bibliotecas do diretório `libs` para `/usr/local/lib`.
 
-4. **Cria Diretórios Necessários:**
+5. **Cria Diretórios Necessários:**
    - Garante a existência dos diretórios:
      - `/var/log/zabbix` para logs.
      - `/var/run/zabbix` para arquivos de PID.
-     - Outros necessários para a execução do Zabbix Proxy.
+     - Outros necessários para a execução do Zabbix Proxy e Agent.
 
-5. **Ajusta Permissões:**
+6. **Ajusta Permissões:**
    - Configura o proprietário e as permissões corretas para os arquivos e diretórios.
 
-6. **Configura o Script de Inicialização:**
-   - Cria um script de inicialização em `/usr/local/etc/rc.d/zabbix_proxy`.
+7. **Configura os Scripts de Inicialização:**
+   - Cria um script de inicialização para o Proxy em `/usr/local/etc/rc.d/zabbix_proxy`.
+   - Cria um script de inicialização para o Agent em `/usr/local/etc/rc.d/zabbix_agent`.
 
-7. **Adiciona o Serviço ao `rc.conf`:**
-   - Configura o Zabbix Proxy para iniciar automaticamente com o sistema.
+8. **Adiciona os Serviços ao `rc.conf`:**
+   - Configura o Zabbix Proxy e Agent para iniciarem automaticamente com o sistema.
 
-8. **Reinicia o Serviço:**
-   - Inicia o serviço Zabbix Proxy e verifica seu status.
+9. **Reinicia os Serviços:**
+   - Inicia os serviços Zabbix Proxy e Agent e verifica seus status.
 
 ## Verificação Pós-Instalação
 
-1. **Verificar o Status do Serviço:**
+1. **Verificar o Status dos Serviços:**
 
-   Após a execução do script, verifique se o Zabbix Proxy está rodando corretamente:
+   Após a execução do script, verifique se os serviços estão rodando corretamente:
 
    ```bash
    service zabbix_proxy status
+   service zabbix_agent status
    ```
 
 2. **Verificar Logs:**
@@ -98,6 +108,7 @@ O script realiza os seguintes passos para configurar o **Zabbix Proxy**:
 
    ```bash
    tail -n 50 /var/log/zabbix/zabbix_proxy.log
+   tail -n 50 /var/log/zabbix/zabbix_agentd.log
    ```
 
 ## Contribuições
