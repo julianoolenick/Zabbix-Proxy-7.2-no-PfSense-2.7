@@ -36,11 +36,12 @@ INSTALL_AGENT="n"
 echo "Deseja instalar o agente ? (y/n) default n:"
 read -r INSTALL_AGENT
 
+
+
+if [ "$INSTALL_AGENT" == "y"]; then
 #Pergunta o nome do agente
 echo "Digite o nome do Agente:"
 read -r ZABBIX_AGENT_NAME
-
-if [ "$INSTALL_AGENT" == "y"]; then
 if [ -z "$ZABBIX_AGENT_NAME" ]; then
     echo "O nome do Agente não pode estar vazio."
     exit 1
@@ -116,7 +117,7 @@ if [ ! -f "$LOG_FILE" ]; then
     touch "$LOG_FILE"
 fi
 
-if [ "$INSTALL_AGENT" == "y"]; then; then
+if [ "$INSTALL_AGENT" == "y"]; then
 # Criando o arquivo de log do agente e ajustando permissões
 if [ ! -f "$AGENT_LOG_FILE" ]; then
     echo "Criando arquivo de log $AGENT_LOG_FILE..."
