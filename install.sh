@@ -40,9 +40,11 @@ read -r INSTALL_AGENT
 echo "Digite o nome do Agente:"
 read -r ZABBIX_AGENT_NAME
 
+if [ "$INSTALL_AGENT" == "y"]; then
 if [ -z "$ZABBIX_AGENT_NAME" ]; then
     echo "O nome do Agente não pode estar vazio."
     exit 1
+fi
 fi
 
 # Caminho do arquivo de configuração
@@ -114,7 +116,7 @@ if [ ! -f "$LOG_FILE" ]; then
     touch "$LOG_FILE"
 fi
 
-if [ "$INSTALL_AGENT" == "y"]
+if [ "$INSTALL_AGENT" == "y"]; then; then
 # Criando o arquivo de log do agente e ajustando permissões
 if [ ! -f "$AGENT_LOG_FILE" ]; then
     echo "Criando arquivo de log $AGENT_LOG_FILE..."
@@ -144,7 +146,7 @@ else
     echo "Aviso: Arquivo 'zabbix_proxy' não encontrado."
 fi
 
-if [ "$INSTALL_AGENT" == "y"]
+if [ "$INSTALL_AGENT" == "y"]; then
 # Copiando os binários do agente
 echo "Copiando binários..."
 if [ -f "$SOURCE_DIR/agent/zabbix_agentd" ]; then
@@ -171,7 +173,7 @@ else
     echo "Aviso: Diretório de configuração 'zabbix72' não encontrado."
 fi
 
-if [ "$INSTALL_AGENT" == "y"]
+if [ "$INSTALL_AGENT" == "y"]; then
 # Copiando arquivos de configuração do agente
 echo "Copiando arquivos de configuração..."
 if [ -d "$SOURCE_DIR/zabbix72" ]; then
@@ -259,7 +261,7 @@ service zabbix_proxy restart || echo "Erro: Não foi possível reiniciar o servi
 echo "Verificando o status do Zabbix Proxy..."
 service zabbix_proxy status || echo "Erro: Serviço Zabbix Proxy não está ativo."
 
-if [ "$INSTALL_AGENT" == "y"]
+if [ "$INSTALL_AGENT" == "y"]; then
 # Criando o script de inicialização do Zabbix Agent
 echo "Criando script de inicialização do Zabbix Agent..."
 cat <<EOF > /usr/local/etc/rc.d/zabbix_agent
