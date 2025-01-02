@@ -31,10 +31,10 @@ if [ -z "$ZABBIX_PROXY_NAME" ]; then
 fi
 
 
-INSTALL_AGENT="n"
 #Pergunta o nome do agente
 echo "Deseja instalar o agente ? (y/n) default n:"
 read -r INSTALL_AGENT
+INSTALL_AGENT=${INSTALL_AGENT:-n}
 
 
 
@@ -42,10 +42,10 @@ if [ "$INSTALL_AGENT" == "y"]; then
 #Pergunta o nome do agente
 echo "Digite o nome do Agente:"
 read -r ZABBIX_AGENT_NAME
-if [ -z "$ZABBIX_AGENT_NAME" ]; then
-    echo "O nome do Agente não pode estar vazio."
-    exit 1
-fi
+    if [ -z "$ZABBIX_AGENT_NAME" ]; then
+        echo "O nome do Agente não pode estar vazio."
+        exit 1
+    fi
 fi
 
 # Caminho do arquivo de configuração
@@ -68,11 +68,13 @@ sed -i.bak \
 
 ZABBIX_AGENT_CONF="$SOURCE_DIR/agent/zabbix_agentd.conf"
 
+if [ "$INSTALL_AGENT" == "y"]; then
 # Substitui as configurações no arquivo de configuração do agente
 echo "Atualizando configurações no arquivo $ZABBIX_AGENT_CONF..."
 sed -i.bak \
     -e "s/^Hostname=.*$/Hostname=$ZABBIX_AGENT_NAME/" \
     "$ZABBIX_AGENT_CONF"
+fi
 
 # Destinos dos arquivos
 BIN_DIR="/usr/local/sbin"
@@ -119,18 +121,21 @@ fi
 
 if [ "$INSTALL_AGENT" == "y"]; then
 # Criando o arquivo de log do agente e ajustando permissões
-if [ ! -f "$AGENT_LOG_FILE" ]; then
-    echo "Criando arquivo de log $AGENT_LOG_FILE..."
-    touch "$AGENT_LOG_FILE"
-fi
+    if [ ! -f "$AGENT_LOG_FILE" ]; then
+        echo "Criando arquivo de log $AGENT_LOG_FILE..."
+        touch "$AGENT_LOG_FILE"
+    fi
 fi
 
 echo "Ajustando permissões para o arquivo de log..."
 chown -R zabbix:zabbix "$LOG_DIR"
-chown -R zabbix:zabbix "$AGENT_LOG_FILE"
 chmod 755 "$LOG_DIR"
 chmod 644 "$LOG_FILE"
+
+if [ "$INSTALL_AGENT" == "y"]; then
+chown -R zabbix:zabbix "$AGENT_LOG_FILE"
 chmod 644 "$AGENT_LOG_FILE"
+fi
 
 # Criando o diretório de runtime e ajustando permissões
 echo "Criando diretório /var/run/zabbix..."
@@ -148,14 +153,14 @@ else
 fi
 
 if [ "$INSTALL_AGENT" == "y"]; then
-# Copiando os binários do agente
-echo "Copiando binários..."
-if [ -f "$SOURCE_DIR/agent/zabbix_agentd" ]; then
-    cp "$SOURCE_DIR/agent/zabbix_agentd" "$BIN_DIR/"
-    
-else
-    echo "Aviso: Arquivo agent/zabbix_agentd não encontrado."
-fi
+    # Copiando os binários do agente
+    echo "Copiando binários..."
+    if [ -f "$SOURCE_DIR/agent/zabbix_agentd" ]; then
+        cp "$SOURCE_DIR/agent/zabbix_agentd" "$BIN_DIR/"
+        
+    else
+        echo "Aviso: Arquivo agent/zabbix_agentd não encontrado."
+    fi
 fi
 
 # Copiando os binários zabix_proxy_js
@@ -175,14 +180,14 @@ else
 fi
 
 if [ "$INSTALL_AGENT" == "y"]; then
-# Copiando arquivos de configuração do agente
-echo "Copiando arquivos de configuração..."
-if [ -d "$SOURCE_DIR/zabbix72" ]; then
-    cp -r "$SOURCE_DIR/agent/zabbix_agentd.conf" /usr/local/etc/zabbix/
-   
-else
-    echo "Aviso: Arquivo de configuração 'zabbix_agentd.conf' não encontrado."
-fi
+    # Copiando arquivos de configuração do agente
+    echo "Copiando arquivos de configuração..."
+    if [ -d "$SOURCE_DIR/zabbix72" ]; then
+        cp -r "$SOURCE_DIR/agent/zabbix_agentd.conf" /usr/local/etc/zabbix/
+    
+    else
+        echo "Aviso: Arquivo de configuração 'zabbix_agentd.conf' não encontrado."
+    fi
 fi
 
 # Copiando bibliotecas adicionais
