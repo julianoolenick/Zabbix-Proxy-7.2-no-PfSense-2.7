@@ -30,6 +30,12 @@ if [ -z "$ZABBIX_PROXY_NAME" ]; then
     exit 1
 fi
 
+
+INSTALL_AGENT="n"
+#Pergunta o nome do agente
+echo "Deseja instalar o agente ? (y/n) default n:"
+read -r INSTALL_AGENT
+
 #Pergunta o nome do agente
 echo "Digite o nome do Agente:"
 read -r ZABBIX_AGENT_NAME
@@ -108,10 +114,12 @@ if [ ! -f "$LOG_FILE" ]; then
     touch "$LOG_FILE"
 fi
 
+if [ "$INSTALL_AGENT" == "y"]
 # Criando o arquivo de log do agente e ajustando permissões
 if [ ! -f "$AGENT_LOG_FILE" ]; then
     echo "Criando arquivo de log $AGENT_LOG_FILE..."
     touch "$AGENT_LOG_FILE"
+fi
 fi
 
 echo "Ajustando permissões para o arquivo de log..."
@@ -136,6 +144,7 @@ else
     echo "Aviso: Arquivo 'zabbix_proxy' não encontrado."
 fi
 
+if [ "$INSTALL_AGENT" == "y"]
 # Copiando os binários do agente
 echo "Copiando binários..."
 if [ -f "$SOURCE_DIR/agent/zabbix_agentd" ]; then
@@ -143,6 +152,7 @@ if [ -f "$SOURCE_DIR/agent/zabbix_agentd" ]; then
     
 else
     echo "Aviso: Arquivo agent/zabbix_agentd não encontrado."
+fi
 fi
 
 # Copiando os binários zabix_proxy_js
@@ -161,6 +171,7 @@ else
     echo "Aviso: Diretório de configuração 'zabbix72' não encontrado."
 fi
 
+if [ "$INSTALL_AGENT" == "y"]
 # Copiando arquivos de configuração do agente
 echo "Copiando arquivos de configuração..."
 if [ -d "$SOURCE_DIR/zabbix72" ]; then
@@ -168,6 +179,7 @@ if [ -d "$SOURCE_DIR/zabbix72" ]; then
    
 else
     echo "Aviso: Arquivo de configuração 'zabbix_agentd.conf' não encontrado."
+fi
 fi
 
 # Copiando bibliotecas adicionais
@@ -247,6 +259,7 @@ service zabbix_proxy restart || echo "Erro: Não foi possível reiniciar o servi
 echo "Verificando o status do Zabbix Proxy..."
 service zabbix_proxy status || echo "Erro: Serviço Zabbix Proxy não está ativo."
 
+if [ "$INSTALL_AGENT" == "y"]
 # Criando o script de inicialização do Zabbix Agent
 echo "Criando script de inicialização do Zabbix Agent..."
 cat <<EOF > /usr/local/etc/rc.d/zabbix_agent
@@ -289,6 +302,7 @@ service zabbix_agent restart || echo "Erro: Não foi possível reiniciar o servi
 echo "Verificando o status do Zabbix Agent..."
 service zabbix_agent status || echo "Erro: Serviço Zabbix Agent não está ativo."
 
+fi
 
 echo "Configuração concluída!"
 
